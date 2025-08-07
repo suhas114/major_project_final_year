@@ -1,0 +1,2 @@
+# major_project_final_year
+forest_fire_detection.
