@@ -1,0 +1,11 @@
+path: dataset  # dataset root directory
+train: images/train  # train images (relative to 'path')
+val: images/val  # validation images (relative to 'path')
+test: images/test  # test images (optional)
+
+# Classes
+nc: 2  # number of classes
+names: ['smoke', 'fire']  # class names
+
+# Download script/URL (optional)
+download: https://example.com/dataset.zip 
