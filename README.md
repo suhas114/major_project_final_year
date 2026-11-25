@@ -1,110 +1,84 @@
 # Forest Fire Detection using YOLOv8
 
-This project implements a forest fire detection system using the YOLOv8 deep learning model. It can detect fires and smoke in both images and video streams, making it useful for early forest fire detection and monitoring.
+A Python application for experimenting with fire- and smoke-related object detection using Ultralytics YOLOv8. The repository includes webcam/video detection, image prediction helpers, and scripts for preparing a custom dataset.
 
 ## Features
+- Run YOLOv8 inference on a webcam or video file.
+- Process a single image and return detection metadata.
+- Train a custom YOLO model with a YOLO-format dataset.
+- Prepare train, validation, and test folders from the source image directories.
 
-- Real-time fire and smoke detection
-- Support for both image and video processing
-- Custom model training capability
-- Easy-to-use Python interface
-- Support for webcam and video file inputs
+## Requirements
+- Python 3.10 or newer is recommended.
+- A working webcam is needed for live camera detection.
+- Install the Python dependencies from `requirements.txt`.
 
 ## Installation
-
-1. Clone this repository:
+1. Clone the repository and enter its directory:
 ```bash
 git clone https://github.com/suhas114/major_project_final_year.git
 cd major_project_final_year
 ```
 
-2. Install the required dependencies:
+2. Create and activate a virtual environment (recommended):
 ```bash
-pip install -r requirements.txt
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
 ```
 
-## Usage
-
-### Basic Usage
-
-Run the default detection script using your webcam:
-
+3. Install dependencies:
 ```bash
-python forest_fire_detection.py
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-### Using the ForestFireDetector Class
+## Run live detection
+The main `ForestFireDetector` implementation is in `forest_fire_prediction.py`. Start webcam detection with:
+```bash
+python forest_fire_prediction.py
+```
+Press `q` in the video window to stop the camera feed.
 
+To use a video file or process one image, import the class:
 ```python
-from forest_fire_detection import ForestFireDetector
+from forest_fire_prediction import ForestFireDetector
 
-# Initialize detector
 detector = ForestFireDetector()
-
-# Process a single image
-results = detector.process_image('path/to/image.jpg')
-
-# Process video stream (0 for webcam, or provide video file path)
-detector.process_video(video_source=0)
+detector.process_video("path/to/video.mp4")
+detections = detector.process_image("path/to/image.jpg")
+print(detections)
 ```
+`process_image` returns a list of detections containing each bounding box, confidence score, and class ID.
 
-### Training Custom Model
+## Prepare a custom dataset
+`prepare_dataset.py` expects source images in these folders:
+- `fire/Forest_Fire_BigData/fire_images/`
+- `fire/Forest_Fire_BigData/non_fire_images/`
 
-To train a custom model for fire detection:
+Run:
+```bash
+python prepare_dataset.py
+```
+The script creates `dataset/images/` and `dataset/labels/` with train, validation, and test splits, then writes `dataset/data.yaml`. Make sure the source image folders exist and contain `.jpg` images before running it.
 
-1. Prepare your dataset in YOLO format
-2. Create a data.yaml file with your dataset configuration
-3. Train the model:
-
+## Train a custom model
+After preparing the dataset, train using the generated configuration:
 ```python
+from forest_fire_prediction import ForestFireDetector
+
 detector = ForestFireDetector()
-detector.train_custom_model(
-    data_yaml_path='path/to/data.yaml',
-    epochs=100
-)
+detector.train_custom_model(data_yaml_path="dataset/data.yaml", epochs=100)
 ```
+Training requires the dataset images and labels to be present. Adjust the epoch count and training settings to suit your hardware and dataset.
 
-## Dataset Preparation
+## Other scripts
+- `predict.py` provides the separate `FireDetector` helper for image and video inference.
+- `realtime_detection.py` contains an additional real-time visualization experiment with OpenCV and sound alerts; it requires the optional runtime assets and a desktop display.
 
-For custom training, prepare your dataset in the following structure:
-
-```
-dataset/
-├── images/
-│   ├── train/
-│   ├── val/
-│   └── test/
-└── labels/
-    ├── train/
-    ├── val/
-    └── test/
-```
-
-Create a data.yaml file with:
-
-```yaml
-path: path/to/dataset
-train: images/train
-val: images/val
-test: images/test
-
-nc: 2  # number of classes
-names: ['smoke', 'fire']  # class names
-```
-
-## Model Performance
-
-The system uses YOLOv8, which offers a good balance between speed and accuracy. For optimal performance:
-
-- Use good lighting conditions
-- Position cameras strategically
-- Consider environmental factors (smoke, fog, etc.)
-- Adjust confidence thresholds as needed
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+## Notes
+- The default model file `yolov8n.pt` is included in the repository.
+- Model predictions depend on the weights used. The included pretrained YOLOv8 model is not automatically a fire-specific model; use a fire-trained checkpoint for fire-specific detection.
+- Camera access and OpenCV display windows may not work in headless server environments.
