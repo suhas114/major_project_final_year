@@ -57,33 +57,33 @@ class ForestFireDetector:
 
     def process_video(self, video_source=0, display=True):
         """
-        Process video stream for fire detection
+        Process a video stream or file while ensuring capture resources are released.
         Args:
             video_source: Camera index or video file path
-            display (bool): Whether to display the video feed
+            display (bool): Whether to display the annotated video
         """
         cap = cv2.VideoCapture(video_source)
-        
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            # Perform detection
-            results = self.model(frame)
-            
-            # Draw results on frame
-            annotated_frame = results[0].plot()
-            
-            if display:
-                cv2.imshow('Forest Fire Detection', annotated_frame)
-                
-                # Break loop with 'q'
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+        if not cap.isOpened():
+            cap.release()
+            raise RuntimeError(f"Unable to open video source: {video_source}")
+
+        try:
+            while True:
+                ret, frame = cap.read()
+                if not ret:
                     break
-        
-        cap.release()
-        cv2.destroyAllWindows()
+
+                results = self.model(frame)
+                annotated_frame = results[0].plot()
+
+                if display:
+                    cv2.imshow('Forest Fire Detection', annotated_frame)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+        finally:
+            cap.release()
+            if display:
+                cv2.destroyAllWindows()
 
     def train_custom_model(self, data_yaml_path, epochs=100):
         """
